@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
 import { View, Text, TextInput, Pressable, PressableStateCallbackType, StyleSheet } from 'react-native'
 import { useAuthContext } from '../../contexts/AuthContext'
 
 export default function Login() {
-    const router = useRouter();
     const { loginWithEmail } = useAuthContext();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -69,7 +67,6 @@ export default function Login() {
 
     const submit = async () => {
         await loginWithEmail({email: email, password: password});
-        router.push('/');
     };
 
     return (

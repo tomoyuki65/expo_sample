@@ -1,10 +1,16 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
 import { View, Text, TextInput, Pressable, PressableStateCallbackType, StyleSheet } from 'react-native'
 import { useAuthContext } from '../../contexts/AuthContext'
+import * as Yup from 'yup'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { useForm, SubmitHandler, SubmitErrorHandler, Controller } from 'react-hook-form'
+
+type FormData = {
+    email: string,
+    password: string,
+};
 
 export default function Signup() {
-    const router = useRouter();
     const { signupWithEmail } = useAuthContext();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -65,11 +71,49 @@ export default function Signup() {
             color: 'white',
             fontWeight: 'bold',
         },
+        errorText: {
+            color: 'red',
+        },
     });
 
+    // バリデーションの設定
+    const validationSchema = Yup.object().shape({
+        email: Yup.string()
+                  .required('メールアドレスを入力して下さい。')
+                  .email('メールアドレスは有効なアドレス形式で入力して下さい。'),
+        password: Yup.string()
+                     .required('パスワードを入力して下さい。')
+                     .matches(/^[0-9a-zA-Z]+$/, 'パスワードは半角英数字で入力して下さい。')
+                     .min(6, 'パスワードは6文字以上で入力して下さい。'),
+    });
+    const formOptions = { resolver: yupResolver(validationSchema) };
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+        getValues,
+    } = useForm(formOptions);
+
+    // バリデーションチェックで正常時
+    const onSubmit: SubmitHandler<FormData> = async (
+        data: any,
+    ) => {
+        await signupWithEmail({email: data.email, password: data.password});
+    };
+
+    // バリデーションチェックでエラー時
+    const onError: SubmitErrorHandler<FormData> = async (
+        errors: any
+    ) => {
+        console.log('バリデーションチェックでエラー');
+        console.log(errors);
+    };
+
     const submit = async () => {
-        await signupWithEmail({email: email, password: password});
-        router.push('/');
+        const values = getValues();
+        setEmail(values.email);
+        setPassword(values.password);
+        handleSubmit(onSubmit, onError)()
     };
 
     return (
@@ -84,22 +128,56 @@ export default function Signup() {
                     <Text style={styles.inputItemLabel}>
                         メールアドレス
                     </Text>
-                    <TextInput
-                        style={styles.inputItemText}
-                        onChangeText={setEmail}
-                        value={email}
-                        placeholder="xxxx@example.com"
-                        placeholderTextColor={'gray'}
+                    <Controller
+                        control={control}
+                        name={'email'}
+                        defaultValue={email}
+                        render={({
+                           field: { onChange, value, name },
+                           formState: { errors },
+                        }) => (
+                            <View>
+                                <TextInput
+                                    style={styles.inputItemText}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="xxxx@example.com"
+                                    placeholderTextColor={'gray'}
+                                />
+                                { errors[name]?.message && (
+                                    <Text style={styles.errorText}>
+                                        { String(errors[name]?.message) }
+                                    </Text>
+                                )}
+                            </View>
+                        )}
                     />
                 </View>
                 <View style={styles.inputItem}>
                     <Text style={styles.inputItemLabel}>
                         パスワード
                     </Text>
-                    <TextInput
-                        style={styles.inputItemText}
-                        onChangeText={setPassword}
-                        value={password}
+                    <Controller
+                        control={control}
+                        name={'password'}
+                        defaultValue={password}
+                        render={({
+                           field: { onChange, value, name },
+                           formState: { errors },
+                        }) => (
+                            <View>
+                                <TextInput
+                                    style={styles.inputItemText}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                                { errors[name]?.message && (
+                                    <Text style={styles.errorText}>
+                                        { String(errors[name]?.message) }
+                                    </Text>
+                                )}
+                            </View>
+                        )}
                     />
                 </View>
             </View>
@@ -111,7 +189,7 @@ export default function Signup() {
                 ]}
                 onHoverIn={() => setIsHoverd(true) }
                 onHoverOut={() => setIsHoverd(false) }
-                onPress={() => submit() }
+                onPress={() => submit()}
             >
                 <View style={styles.pressableItem}>
                     <Text style={styles.pressableItemText}>

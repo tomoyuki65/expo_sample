@@ -9,11 +9,13 @@ import {
     signOut,
     deleteUser,
 } from 'firebase/auth'
+import { useRouter } from 'expo-router'
 
 // useFirebaseAuth関数
 export default function useFirebaseAuth() {
     const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     // Signup関数
     const signupWithEmail = async (args: {
@@ -28,6 +30,7 @@ export default function useFirebaseAuth() {
             createUser = credential.user;
 
             setLoading(false);
+            router.push('/');
             return;
     
         } catch (error) {
@@ -58,6 +61,7 @@ export default function useFirebaseAuth() {
             const credential = await signInWithEmailAndPassword(auth, args.email, args.password);
     
             setLoading(false);
+            router.push('/');
             return;
     
         } catch (error) {
@@ -87,6 +91,7 @@ export default function useFirebaseAuth() {
             setFirebaseUser(null);
 
             setLoading(false);
+            router.push('/');
             return;
     
         } catch (error) {
@@ -119,6 +124,7 @@ export default function useFirebaseAuth() {
             await logout();
       
             setLoading(false);
+            router.push('/');
             return;
     
         } catch (error) {
